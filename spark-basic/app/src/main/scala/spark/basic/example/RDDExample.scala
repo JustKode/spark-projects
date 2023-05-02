@@ -1,8 +1,9 @@
 package spark.basic.example
 
 import org.apache.spark.SparkContext
+import spark.basic.init.InitSpark
 
-class RDDExample {
+object RDDExample extends InitSpark {
   private val dataExample: Seq[(String, Int)] = Seq(
     ("Lee", 2000),
     ("Park", 10000),
@@ -12,26 +13,48 @@ class RDDExample {
     ("Song", 2500)
   )
 
-  def operationExample(sc: SparkContext): Unit = {
-    val rdd1 = sc.parallelize(dataExample)
+  private val groupDataExample: Seq[(String, Int)] = Seq(
+    ("Kim", 2000),
+    ("Kim", 10000),
+    ("Lee", 5000),
+    ("Lee", 1000),
+    ("Park", 7500),
+    ("Park", 2500)
+  )
 
-    println("filter second key >= 5000")
-    rdd1.repartition(2)
-      .filter(x => x._2 >= 5000)
-      .foreach(x => println(x))
+  def filterExample(minValue: Int): Array[(String, Int)] = {
+    sc.parallelize(dataExample)
+      .filter(x => x._2 >= minValue)
+      .collect()
+  }
 
-    println("==================")
+  def mapExample(): Array[String] = {
+    sc.parallelize(dataExample)
+      .map(x => x._1 + ":" + x._2)
+      .collect()
+  }
 
-    println("map vs flatMap")
+  def flatMapExample(): Array[Char] = {
+    sc.parallelize(dataExample)
+      .filter(x => x._2 >= 10000)
+      .flatMap(x => x._1)
+      .collect()
+  }
 
-    val rdd2 = sc.parallelize(dataExample)
+  def countExample(): Long = {
+    sc.parallelize(dataExample)
+      .count()
+  }
 
-    rdd2.map(x => x._1)
-      .foreach(x => println(x))
+  def reduceByKeyExample(): Array[(String, Int)] = {
+    sc.parallelize(groupDataExample)
+      .reduceByKey((x, y) => x + y)
+      .collect()
+  }
 
-    val rdd3 = sc.parallelize(dataExample)
-
-    rdd3.flatMap(x => x._1)
-      .foreach(x => println(x))
+  def reduceExample(): Int = {
+    sc.parallelize(dataExample)
+      .map(x => x._2)
+      .reduce((x, y) => x + y)
   }
 }
